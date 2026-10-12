@@ -1,0 +1,9 @@
+{
+  "name": "trial-app",
+  "scripts": {
+    "test": "echo 'No tests'",
+    "lint:boundaries": "echo 'Mock'",
+    "lint:ci": "echo 'Mock'",
+    "lint:ci:check": "echo 'Mock'"
+  }
+}
