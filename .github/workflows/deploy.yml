@@ -54,14 +54,27 @@ jobs:
         with:
           path: ./
           base: ""
-          head: ${{ github.ref_name }}
-          extra_args: --debug --only-verified
+          extra_args: --debug --result=verified,unknown,unverified
+
+      - name: Set up Python for Semgrep
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Semgrep
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install semgrep
+          semgrep --version
 
       - name: SAST Scan (Semgrep)
-        uses: returntocorp/semgrep-action@v1
-        with:
-          config: "p/default"
-
+        run: |
+          semgrep scan \
+            --config p/default \
+            --error \
+            --metrics=off \
+            .
+            
   build-and-push:
     name: Build, Scan & Push Docker Image
     runs-on: ubuntu-latest

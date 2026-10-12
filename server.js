@@ -62,5 +62,5 @@ app.post('/login', (req, res) => {
 app.listen(port, () => {
     console.log(`Server mendengarkan di port ${port}`);
     // VULNERABILITY 3: Hardcoded Secret (TruffleHog/GitLeaks akan mendeteksi ini)
-    console.log(`API_KEY_RAHASIA=AKIAIOSFODNN7EXAMPLE`); 
+    console.log(`STRIPE_KEY=sk_live_51MabcDeFghiJklMnoPqrStuVwxYz`); 
 });
