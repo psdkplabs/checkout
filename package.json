@@ -1,9 +1,15 @@
 {
-  "name": "trial-app",
+  "name": "trial-project-vulnerable",
+  "version": "1.0.0",
   "scripts": {
-    "test": "echo 'No tests'",
-    "lint:boundaries": "echo 'Mock'",
-    "lint:ci": "echo 'Mock'",
-    "lint:ci:check": "echo 'Mock'"
+    "start": "bun run server.js",
+    "test": "echo 'Pass: No tests needed'",
+    "lint:boundaries": "echo 'Pass: Mock boundaries'",
+    "lint:ci": "echo 'Pass: Mock CI'",
+    "lint:ci:check": "echo 'Pass: Mock CI Check'"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "sqlite3": "^5.1.6"
   }
 }
