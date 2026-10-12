@@ -49,10 +49,13 @@ jobs:
       # ==========================================
       # SECURITY GATE 1: CODE & SECRET SCAN
       # ==========================================
-      - name: Secret Scan (GitLeaks)
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Secret Scan (TruffleHog)
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ""
+          head: ${{ github.ref_name }}
+          extra_args: --debug --only-verified
 
       - name: SAST Scan (Semgrep)
         uses: returntocorp/semgrep-action@v1
