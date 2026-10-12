@@ -54,7 +54,7 @@ jobs:
         with:
           path: ./
           base: ""
-          extra_args: --debug --result=verified,unknown,unverified
+          extra_args: --debug
 
       - name: Set up Python for Semgrep
         uses: actions/setup-python@v5
@@ -74,7 +74,7 @@ jobs:
             --error \
             --metrics=off \
             .
-            
+
   build-and-push:
     name: Build, Scan & Push Docker Image
     runs-on: ubuntu-latest
