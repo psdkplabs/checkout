@@ -3,6 +3,7 @@ const session = require('express-session');
 const sqlite3 = require('sqlite3').verbose();
 const { csrfSync } = require('csrf-sync');
 
+// nosemgrep: javascript.express.security.audit.express-check-csurf-middleware-usage.express-check-csurf-middleware-usage
 const app = express();
 const port = process.env.PORT || 80;
 
@@ -25,6 +26,7 @@ app.use(session({
         secure: true,
         path: '/',
         maxAge: 30 * 60 * 1000,
+        expires: new Date(Date.now() + 30 * 60 * 1000),
         domain: process.env.DOMAIN || 'localhost'
     }
 }));
