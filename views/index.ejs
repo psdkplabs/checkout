@@ -1,0 +1,25 @@
+```html
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Login DevSecOps Trial</title>
+</head>
+<body>
+    <h1>Selamat Datang, <%= name %>!</h1>
+    <h2>Silakan Login</h2>
+
+    <form action="/login" method="POST">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+        <label>Username:</label><br>
+        <input type="text" name="username" required><br>
+
+        <label>Password:</label><br>
+        <input type="password" name="password" required><br><br>
+
+        <button type="submit">Login</button>
+    </form>
+</body>
+</html>
+```

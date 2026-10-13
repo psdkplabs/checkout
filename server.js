@@ -1,62 +1,64 @@
 const express = require('express');
+const session = require('express-session');
 const sqlite3 = require('sqlite3').verbose();
+const { csrfSync } = require('csrf-sync');
+
 const app = express();
-function escapeHtml(value) {
-    return String(value).replace(/[&<>"']/g, (char) => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;'
-    })[char]);
-}
 const port = process.env.PORT || 80;
 
-// Setup Database SQLite di Memory
+app.set('view engine', 'ejs');
+
+app.use(express.urlencoded({ extended: true }));
+
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        httpOnly: true,
+        sameSite: 'strict',
+        secure: process.env.NODE_ENV === 'production'
+    }
+}));
+
+const {
+    csrfSynchronisedProtection,
+    generateToken
+} = csrfSync({
+    getTokenFromRequest: (req) => {
+        return req.body?._csrf || req.headers['x-csrf-token'];
+    }
+});
+
 const db = new sqlite3.Database(':memory:');
 
 db.serialize(() => {
-    db.run("CREATE TABLE users (id INT, username TEXT, password TEXT)");
-    db.run("INSERT INTO users VALUES (1, 'admin', 'SuperSecretAdmin123!')");
-    db.run("INSERT INTO users VALUES (2, 'user_biasa', 'password123')");
+    db.run(
+        'CREATE TABLE users (id INT, username TEXT, password TEXT)'
+    );
+    db.run(
+        'INSERT INTO users VALUES (?, ?, ?)',
+        [1, 'admin', 'SuperSecretAdmin123!']
+    );
+    db.run(
+        'INSERT INTO users VALUES (?, ?, ?)',
+        [2, 'user_biasa', 'password123']
+    );
 });
 
-app.use(express.urlencoded({ extended: true })); // Untuk parsing form login
-
-// Halaman Utama dengan Form Login dan Celah XSS (Reflected XSS)
 app.get('/', (req, res) => {
-    // VULNERABILITY 1: Reflected XSS (Mencetak input user langsung ke HTML)
-    // Sudah di fix dengan escapeHtml
-    const name = escapeHtml(req.query.name || 'Guest'); 
-    
-    res.send(`
-        <html>
-            <head><title>Login DevSecOps Trial</title></head>
-            <body>
-                <h1>Selamat Datang, ${name}!</h1>
-                <h2>Silakan Login</h2>
-                <form action="/login" method="POST">
-                    <label>Username:</label><br>
-                    <input type="text" name="username"><br>
-                    <label>Password:</label><br>
-                    <input type="password" name="password"><br><br>
-                    <button type="submit">Login</button>
-                </form>
-            </body>
-        </html>
-    `);
+    res.render('index', {
+        name: req.query.name || 'Guest',
+        csrfToken: generateToken(req)
+    });
 });
 
-// Proses Login dengan Celah SQL Injection
-app.post('/login', (req, res) => {
+// Validasi token sebelum handler login
+app.post('/login', csrfSynchronisedProtection, (req, res) => {
     const { username, password } = req.body;
 
-    // VULNERABILITY 2: SQL Injection (Menggabungkan string input langsung ke query SQL)
-    // Coba login dengan username: admin' OR '1'='1 
-    // dan password terserah, Anda akan bisa masuk!
-    const query = `SELECT * FROM users WHERE username = ? AND password = ?`;
-    
-    console.log("Mengeksekusi Query:", query); // Bahaya: mencetak query ke log
+    const query =
+        'SELECT * FROM users WHERE username = ? AND password = ?';
 
     db.get(query, [username, password], (err, row) => {
         if (err) {
@@ -64,21 +66,15 @@ app.post('/login', (req, res) => {
         }
 
         if (row) {
-            return res.send(
-                `<h1>Login Berhasil! Selamat datang ${
-                    escapeHtml(row.username)
-                }</h1>`
-            );
+            return res.render('login-success', {
+                username: row.username
+            });
         }
 
-        return res.status(401).send(
-            '<h1>Login Gagal! Username atau password salah.</h1>'
-        );
+        return res.status(401).render('login-failed');
     });
 });
 
 app.listen(port, () => {
     console.log(`Server mendengarkan di port ${port}`);
-    // VULNERABILITY 3: Hardcoded Secret (TruffleHog/GitLeaks akan mendeteksi ini)
-    console.log(`STRIPE_KEY=[DUMMY_SECRET_FOR_SECURITY_TEST]`); 
 });
