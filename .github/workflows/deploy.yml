@@ -75,130 +75,130 @@ jobs:
             --metrics=off \
             .
 
-  build-and-push:
-    name: Build, Scan & Push Docker Image
-    runs-on: ubuntu-latest
-    needs: checks # Job ini tidak akan berjalan jika Gate 1 gagal
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  # build-and-push:
+  #   name: Build, Scan & Push Docker Image
+  #   runs-on: ubuntu-latest
+  #   needs: checks # Job ini tidak akan berjalan jika Gate 1 gagal
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: Log in to GitHub Container Registry
+  #       uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f
+  #       with:
+  #         registry: ${{ env.REGISTRY }}
+  #         username: ${{ github.actor }}
+  #         password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=raw,value=internal
-            type=sha,prefix=internal-
+  #     - name: Extract Docker metadata
+  #       id: meta
+  #       uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302
+  #       with:
+  #         images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+  #         tags: |
+  #           type=raw,value=internal
+  #           type=sha,prefix=internal-
 
-      - name: Inject environment variables
-        env:
-          ENV_INTERNAL: ${{ secrets.ENV_INTERNAL }}
-        run: |
-          if [ -z "$ENV_INTERNAL" ]; then
-            echo "::error::ENV_INTERNAL is not set; cannot create apps/web/.env.internal."
-            exit 1
-          fi
-          echo "$ENV_INTERNAL" > apps/web/.env.internal
-          echo "Successfully created apps/web/.env.internal"
+  #     - name: Inject environment variables
+  #       env:
+  #         ENV_INTERNAL: ${{ secrets.ENV_INTERNAL }}
+  #       run: |
+  #         if [ -z "$ENV_INTERNAL" ]; then
+  #           echo "::error::ENV_INTERNAL is not set; cannot create apps/web/.env.internal."
+  #           exit 1
+  #         fi
+  #         echo "$ENV_INTERNAL" > apps/web/.env.internal
+  #         echo "Successfully created apps/web/.env.internal"
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc
-        with:
-          context: .
-          file: ./Dockerfile
-          build-args: |
-            BUILD_MODE=internal
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+  #     - name: Build and push Docker image
+  #       uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc
+  #       with:
+  #         context: .
+  #         file: ./Dockerfile
+  #         build-args: |
+  #           BUILD_MODE=internal
+  #         push: true
+  #         tags: ${{ steps.meta.outputs.tags }}
+  #         labels: ${{ steps.meta.outputs.labels }}
+  #         cache-from: type=gha
+  #         cache-to: type=gha,mode=max
 
-      # ==========================================
-      # SECURITY GATE 2: CONTAINER SCA SCAN
-      # ==========================================
-      - name: SCA Scan (Trivy Container Scan)
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
-        with:
-          # Memindai image yang baru saja di-push menggunakan tag 'internal'
-          image-ref: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:internal'
-          format: 'table'
-          exit-code: '1' # Gagalkan pipeline jika ditemukan celah
-          severity: 'CRITICAL,HIGH'
-        env:
-          TRIVY_USERNAME: ${{ github.actor }}
-          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+  #     # ==========================================
+  #     # SECURITY GATE 2: CONTAINER SCA SCAN
+  #     # ==========================================
+  #     - name: SCA Scan (Trivy Container Scan)
+  #       uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
+  #       with:
+  #         # Memindai image yang baru saja di-push menggunakan tag 'internal'
+  #         image-ref: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:internal'
+  #         format: 'table'
+  #         exit-code: '1' # Gagalkan pipeline jika ditemukan celah
+  #         severity: 'CRITICAL,HIGH'
+  #       env:
+  #         TRIVY_USERNAME: ${{ github.actor }}
+  #         TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Deploy and verify
-        # (Skrip Coolify bawaan tim Anda tetap tidak diubah sama sekali)
-        env:
-          COOLIFY_DEPLOY_URL: ${{ secrets.COOLIFY_INTERNAL_WEBHOOK }}
-          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
-          COOLIFY_BASE_URL: https://paus.psdkp.cloud
-          IMAGE_TAGS: ${{ steps.meta.outputs.tags }}
-          REGISTRY_USER: ${{ github.actor }}
-          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          if [ -z "$COOLIFY_DEPLOY_URL" ]; then
-            echo "::error::COOLIFY_INTERNAL_WEBHOOK is not set; cannot trigger the deploy."
-            exit 1
-          fi
+  #     - name: Deploy and verify
+  #       # (Skrip Coolify bawaan tim Anda tetap tidak diubah sama sekali)
+  #       env:
+  #         COOLIFY_DEPLOY_URL: ${{ secrets.COOLIFY_INTERNAL_WEBHOOK }}
+  #         COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+  #         COOLIFY_BASE_URL: https://paus.psdkp.cloud
+  #         IMAGE_TAGS: ${{ steps.meta.outputs.tags }}
+  #         REGISTRY_USER: ${{ github.actor }}
+  #         REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #       run: |
+  #         if [ -z "$COOLIFY_DEPLOY_URL" ]; then
+  #           echo "::error::COOLIFY_INTERNAL_WEBHOOK is not set; cannot trigger the deploy."
+  #           exit 1
+  #         fi
 
-          if [ -z "$COOLIFY_TOKEN" ]; then
-            echo "::error::COOLIFY_TOKEN is not set; cannot trigger the deploy."
-            exit 1
-          fi
+  #         if [ -z "$COOLIFY_TOKEN" ]; then
+  #           echo "::error::COOLIFY_TOKEN is not set; cannot trigger the deploy."
+  #           exit 1
+  #         fi
 
-          DEPLOY_IMAGE_TAG="$(echo "$IMAGE_TAGS" | grep -o 'internal-[0-9a-f]\{7,\}' | head -n 1)"
+  #         DEPLOY_IMAGE_TAG="$(echo "$IMAGE_TAGS" | grep -o 'internal-[0-9a-f]\{7,\}' | head -n 1)"
 
-          if [ -z "$DEPLOY_IMAGE_TAG" ]; then
-            echo "::error::Could not derive the image tag from: $IMAGE_TAGS"
-            exit 1
-          fi
+  #         if [ -z "$DEPLOY_IMAGE_TAG" ]; then
+  #           echo "::error::Could not derive the image tag from: $IMAGE_TAGS"
+  #           exit 1
+  #         fi
 
-          echo "Triggering Coolify deployment..."
+  #         echo "Triggering Coolify deployment..."
 
-          RESPONSE="$(curl \
-            --fail \
-            --silent \
-            --show-error \
-            --request POST \
-            --header "Authorization: Bearer $COOLIFY_TOKEN" \
-            "$COOLIFY_DEPLOY_URL")"
+  #         RESPONSE="$(curl \
+  #           --fail \
+  #           --silent \
+  #           --show-error \
+  #           --request POST \
+  #           --header "Authorization: Bearer $COOLIFY_TOKEN" \
+  #           "$COOLIFY_DEPLOY_URL")"
 
-          DEPLOYMENT_UUID="$(printf '%s' "$RESPONSE" | node scripts/read-deployment-uuid.mjs)"
+  #         DEPLOYMENT_UUID="$(printf '%s' "$RESPONSE" | node scripts/read-deployment-uuid.mjs)"
 
-          echo "Coolify queued deployment $DEPLOYMENT_UUID."
+  #         echo "Coolify queued deployment $DEPLOYMENT_UUID."
 
-          echo "Verifying deployment of $DEPLOY_IMAGE_TAG"
-          COOLIFY_DEPLOYMENT_UUID="$DEPLOYMENT_UUID" \
-            DEPLOY_IMAGE_TAG="$DEPLOY_IMAGE_TAG" \
-            node scripts/verify-deploy.mjs
+  #         echo "Verifying deployment of $DEPLOY_IMAGE_TAG"
+  #         COOLIFY_DEPLOYMENT_UUID="$DEPLOYMENT_UUID" \
+  #           DEPLOY_IMAGE_TAG="$DEPLOY_IMAGE_TAG" \
+  #           node scripts/verify-deploy.mjs
 
-  # ==========================================
-  # SECURITY GATE 3: DYNAMIC SCAN (DAST)
-  # ==========================================
-  dynamic-analysis:
-    name: DAST Scan (OWASP ZAP)
-    runs-on: ubuntu-latest
-    needs: build-and-push # Hanya berjalan jika deployment Coolify berhasil diverifikasi
-    steps:
-      - name: OWASP ZAP Baseline Scan
-        uses: zaproxy/action-baseline@de8ad967d3548d44ef623df22cf95c3b0baf8b25
-        with:
-          # Sesuaikan URL ini dengan endpoint internal yang dapat diakses publik.
-          # Asumsi menggunakan virtual path /sip-internal berdasarkan konfigurasi Nginx kantor Anda.
-          target: 'https://sipmdjpsdkp.kkp.go.id/sip-internal' 
-          fail_action: true
+  # # ==========================================
+  # # SECURITY GATE 3: DYNAMIC SCAN (DAST)
+  # # ==========================================
+  # dynamic-analysis:
+  #   name: DAST Scan (OWASP ZAP)
+  #   runs-on: ubuntu-latest
+  #   needs: build-and-push # Hanya berjalan jika deployment Coolify berhasil diverifikasi
+  #   steps:
+  #     - name: OWASP ZAP Baseline Scan
+  #       uses: zaproxy/action-baseline@de8ad967d3548d44ef623df22cf95c3b0baf8b25
+  #       with:
+  #         # Sesuaikan URL ini dengan endpoint internal yang dapat diakses publik.
+  #         # Asumsi menggunakan virtual path /sip-internal berdasarkan konfigurasi Nginx kantor Anda.
+  #         target: 'https://sipmdjpsdkp.kkp.go.id/sip-internal' 
+  #         fail_action: true
