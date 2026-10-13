@@ -8,6 +8,10 @@ const port = process.env.PORT || 80;
 
 app.set('view engine', 'ejs');
 
+// TLS dihentikan oleh reverse proxy di depan aplikasi. Tanpa ini req.secure
+// bernilai false dan express-session tidak akan mengirim cookie `secure`.
+app.set('trust proxy', 1);
+
 app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
@@ -18,9 +22,9 @@ app.use(session({
     cookie: {
         httpOnly: true,
         sameSite: 'strict',
-        secure: process.env.NODE_ENV === 'production',
+        secure: true,
         path: '/',
-        maxAge: 30 * 60 * 1000 
+        maxAge: 30 * 60 * 1000
     }
 }));
 
