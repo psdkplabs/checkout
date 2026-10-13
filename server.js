@@ -24,7 +24,8 @@ app.use(session({
         sameSite: 'strict',
         secure: true,
         path: '/',
-        maxAge: 30 * 60 * 1000
+        maxAge: 30 * 60 * 1000,
+        domain: process.env.DOMAIN || 'localhost'
     }
 }));
 
