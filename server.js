@@ -1,6 +1,15 @@
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const app = express();
+function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    })[char]);
+}
 const port = process.env.PORT || 80;
 
 // Setup Database SQLite di Memory
@@ -17,7 +26,8 @@ app.use(express.urlencoded({ extended: true })); // Untuk parsing form login
 // Halaman Utama dengan Form Login dan Celah XSS (Reflected XSS)
 app.get('/', (req, res) => {
     // VULNERABILITY 1: Reflected XSS (Mencetak input user langsung ke HTML)
-    const name = req.query.name || "Tamu";
+    // Sudah di fix dengan escapeHtml
+    const name = escapeHtml(req.query.name || 'Guest'); 
     
     res.send(`
         <html>
@@ -44,23 +54,31 @@ app.post('/login', (req, res) => {
     // VULNERABILITY 2: SQL Injection (Menggabungkan string input langsung ke query SQL)
     // Coba login dengan username: admin' OR '1'='1 
     // dan password terserah, Anda akan bisa masuk!
-    const query = `SELECT * FROM users WHERE username = '${username}' AND password = '${password}'`;
+    const query = `SELECT * FROM users WHERE username = ? AND password = ?`;
     
     console.log("Mengeksekusi Query:", query); // Bahaya: mencetak query ke log
 
-    db.get(query, (err, row) => {
+    db.get(query, [username, password], (err, row) => {
         if (err) {
-            res.status(500).send("Database Error");
-        } else if (row) {
-            res.send(`<h1>Login Berhasil! Selamat datang ${row.username}</h1>`);
-        } else {
-            res.status(401).send("<h1>Login Gagal! Username atau password salah.</h1>");
+            return res.status(500).send('Database Error');
         }
+
+        if (row) {
+            return res.send(
+                `<h1>Login Berhasil! Selamat datang ${
+                    escapeHtml(row.username)
+                }</h1>`
+            );
+        }
+
+        return res.status(401).send(
+            '<h1>Login Gagal! Username atau password salah.</h1>'
+        );
     });
 });
 
 app.listen(port, () => {
     console.log(`Server mendengarkan di port ${port}`);
     // VULNERABILITY 3: Hardcoded Secret (TruffleHog/GitLeaks akan mendeteksi ini)
-    console.log(`STRIPE_KEY=sk_live_51MabcDeFghiJklMnoPqrStuVwxYz`); 
+    console.log(`STRIPE_KEY=[DUMMY_SECRET_FOR_SECURITY_TEST]`); 
 });
