@@ -23,7 +23,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          fetch-depth: 0 # Wajib 0 agar trufflehog bisa memindai seluruh riwayat komit
+          fetch-depth: 1 #  0 agar trufflehog bisa memindai seluruh riwayat komit
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
