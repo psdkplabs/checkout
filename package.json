@@ -2,11 +2,12 @@
   "name": "trial-project-vulnerable",
   "version": "1.0.0",
   "scripts": {
+    "prepare": "husky",
     "start": "bun run server.js",
     "test": "echo 'Pass: No tests needed'",
     "lint:boundaries": "echo 'Pass: Mock boundaries'",
     "lint:ci": "echo 'Pass: Mock CI'",
-    "lint:ci:check": "echo 'Pass: Mock CI Check'"
+    "lint:ci:check": "echo 'Pass: Mock CI Check'"    
   },
   "dependencies": {
     "csrf-sync": "^4.2.1",
@@ -14,5 +15,8 @@
     "express": "^4.18.2",
     "express-session": "^1.19.0",
     "sqlite3": "^5.1.6"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
   }
 }

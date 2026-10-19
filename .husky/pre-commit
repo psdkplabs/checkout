@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+
+echo "Running Gitleaks secret scan..."
+
+gitleaks git --pre-commit --staged --redact --verbose
