@@ -80,18 +80,7 @@ jobs:
       # ==========================================
       - name: SCA Dependency Scan (Bun Audit)
         run: |
-          # Allowlist/ignore accepted risks or build-only false positives
-          bun audit --audit-level=high \
-            --ignore=GHSA-27r3-jxmh-p828 \
-            --ignore=GHSA-34x7-hfp2-rc4v \
-            --ignore=GHSA-8qq5-rm4j-mr97 \
-            --ignore=GHSA-83g3-92jg-28cx \
-            --ignore=GHSA-qffp-2rhf-9h96 \
-            --ignore=GHSA-9ppj-qmqm-q256 \
-            --ignore=GHSA-r6q2-hw4h-h46w \
-            --ignore=GHSA-23hp-3jrh-7fpw \
-            --ignore=GHSA-8x88-c5mf-7j5w \
-            --ignore=GHSA-r292-9mhp-454m
+          bun audit --audit-level=high
 
   build-and-push:
     name: Build, Scan & Push Docker Image
