@@ -14,7 +14,6 @@
     "ejs": "^7.0.1",
     "express": "^4.18.2",
     "express-session": "^1.19.0",
-    "lodash": "4.17.15",
     "sqlite3": "^5.1.6"
   },
   "devDependencies": {
