@@ -80,7 +80,7 @@ jobs:
       # ==========================================
       - name: SCA Dependency Scan (Bun Audit)
         run: |
-          bun audit --level=high
+          bun audit --audit-level=high
 
   build-and-push:
     name: Build, Scan & Push Docker Image
