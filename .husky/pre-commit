@@ -3,3 +3,7 @@
 echo "Running Gitleaks secret scan..."
 
 gitleaks git --pre-commit --staged --redact --verbose
+
+echo "Running SCA dependency scan..."
+
+bun run security:sca

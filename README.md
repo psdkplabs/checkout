@@ -1,8 +1,8 @@
-## Secret Scanning dengan Gitleaks dan Husky
+## Secret dan Dependency Scanning dengan Gitleaks, SCA, dan Husky
 
-Project ini menggunakan **Gitleaks** dan **Husky** untuk mendeteksi credential atau secret sebelum perubahan di-commit ke repository.
+Project ini menggunakan **Gitleaks**, **Bun Audit (SCA)**, dan **Husky** untuk mendeteksi credential, secret, dan dependency yang memiliki kerentanan sebelum perubahan di-commit ke repository.
 
-Husky menjalankan Gitleaks secara otomatis melalui Git `pre-commit` hook. Jika Gitleaks menemukan secret pada file yang sudah di-stage, proses commit akan dibatalkan.
+Husky menjalankan Gitleaks dan SCA secara otomatis melalui Git `pre-commit` hook. Jika Gitleaks menemukan secret atau SCA menemukan vulnerability dengan severity **high** atau **critical**, proses commit akan dibatalkan.
 
 ### Prerequisites
 
@@ -73,9 +73,20 @@ File `.husky/pre-commit` menjalankan:
 echo "Running Gitleaks secret scan..."
 
 gitleaks git --pre-commit --staged --redact --verbose
+
+echo "Running SCA dependency scan..."
+
+bun run security:sca
 ```
 
 Gitleaks hanya memeriksa perubahan yang telah masuk ke staging area.
+SCA memeriksa dependency project berdasarkan `bun.lock` dan menggagalkan commit jika ditemukan vulnerability dengan severity **high** atau **critical**.
+
+SCA juga dapat dijalankan secara manual:
+
+```bash
+bun run security:sca
+```
 
 Contoh:
 
