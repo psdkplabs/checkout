@@ -130,7 +130,7 @@ secret-test.txt
 Contoh dummy secret:
 
 ```text
-AWS_ACCESS_KEY_ID=AKIALALEMEL33243OLIB
+AWS_ACCESS_KEY_ID=TEST
 ```
 
 Stage file:
